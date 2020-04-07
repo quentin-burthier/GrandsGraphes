@@ -4,14 +4,33 @@ using GraphPlot
 import Cairo, Fontconfig
 using Compose
 
+include("label_propagation.jl")
+using .LabelPropagation: labelpropagation
 
 function plot_graphs(nb_nodes=400, nb_clusters=4, q=0.1)
     p = [0.1, 0.3, 0.5, 0.9]
     for p_i in p
         g, y = generate_graph(p_i, q, nb_nodes, nb_clusters)
-        draw(PNG(string("../res/", p_i, "_clusters.png"), 16cm, 16cm), gplot(g))
+        draw(PNG("../res/$(p_i)_propagation.png", 16cm, 16cm), gplot(g))
     end
 end
+
+
+function main_label_propagation(nb_nodes=400, nb_clusters=4, q=0.1)
+    p = [0.1, 0.3, 0.5, 0.9]
+    for p_i in p
+        graph, gold_labels = generate_graph(p_i, q, nb_nodes, nb_clusters)
+        
+        labels = labelpropagation(graph)
+        # labels, _ = label_propagation(graph) # LightGraph
+        println(collect(zip(labels, gold_labels)))
+        # nodecolor = [colorant"lightseagreen", colorant"orange", colorant"red", colorant"blue"]
+        # nodefillc = nodecolor[membership]
+        # draw(PNG("../res/$(p_i)_propagation.png", 16cm, 16cm), 
+        #      gplot(graph, nodefillc=nodefillc))
+    end
+end
+
 
 function generate_graph(p::Float64, q::Float64, nb_nodes::Int64, nb_clusters::Int64)
     clusters = Vector{Int64}()
@@ -44,4 +63,5 @@ function generate_graph(p::Float64, q::Float64, nb_nodes::Int64, nb_clusters::In
 end
 
 
-plot_graphs()
+# plot_graphs()
+main_label_propagation()

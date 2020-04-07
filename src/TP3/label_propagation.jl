@@ -2,48 +2,45 @@ module LabelPropagation
 
 using Random: randperm
 using StatsBase: countmap
+using LightGraphs
 
-export label_propagation!
+export labelpropagation
 
-AdjacencyList{T} = Vector{Vector{T}}
 
-function label_propagation!(graph::AdjacencyList{UInt})
-    labelled_graph = label_graph(graph)
-    labels = collect(1:length(graph))
+function labelpropagation(graph::AbstractGraph, max_iter=10000)
+    labels = collect(1:nv(graph))
     stable_labels = false
-    while ! stable_labels
-        shuffle!(graph, labels)
-        stable_labels = reassign_labels!(graph, labels)
-    end
-    return graph, labels
-end
-
-function reassign_labels!(graph, labels)
-    new_labels = Array{Int}(undef, 0, 2)
-    for ((node, node_neighbours), label) in zip(graph, labels)
-        neighbours_labels = countmap(labels[neighbour]
-                                     for neighbour in node_neighbours)
-        most_frequent_label, _ = findmax(neighbours_labels)
-        if most_frequent_label != label
-            push!(new_labels, [node, most_frequent_label])
+    for _ in 1:max_iter
+        if reassign_labels!(graph, labels)
+            break
         end
     end
-    for (node, label) in new_labels
-        labels[node] = label
+    return labels
+end
+
+function reassign_labels!(graph::AbstractGraph{T}, labels::Vector{T}) where T<:Integer
+    permu = randperm(nv(graph))
+    c = 0
+    stable = true
+    # for i in permutation
+    for (i, node) in zip(permu, vertices(graph)[permu])
+        label = labels[i]
+        most_frequent_label = find_most_frequent_label(graph, node, labels)    
+        if most_frequent_label != label
+            labels[i] = most_frequent_label
+            stable = false
+            c += 1
+        end
     end
-    return length(new_labels) == 0
+    println(c)
+    return stable
 end
 
-function label_graph(graph::AdjacencyList{UInt})
-    labels = collect(1:length(graph))
-    labelled_graph = zip(labels, graph)
-    return labelled_graph
-end
-
-function shuffle!(graph::AdjacencyList{UInt}, labels::Vector{})
-    permutation = randperm(length(labels))
-    permute!(graph, permutation)
-    permute!(graph, labels)
+function find_most_frequent_label(graph::AbstractGraph{T}, node::T,
+                                  labels::Array{T}) where T<:Integer
+    neighbours_labels = countmap(labels[neighbors(graph, node)])
+    most_frequent_label, _ = findmax(neighbours_labels)
+    return most_frequent_label
 end
 
 end
