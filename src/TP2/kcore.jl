@@ -4,6 +4,7 @@ using ProgressBars
 function load_edges(filename, delim, comments)
     return readdlm(filename, delim, Int, comments=comments)
 end
+
 function kcore(nodes::Vector{Int64}, edges::Matrix{Int64})
     if minimum(edges) == 0
         edges = edges .+ 1
