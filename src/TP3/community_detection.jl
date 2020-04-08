@@ -44,7 +44,7 @@ function generate_graph(p::Float64, q::Float64, nb_nodes::Int64, nb_clusters::In
 end
 
 
-# plot_graphs()
+plot_graphs()
 
 #exercice 2
 
